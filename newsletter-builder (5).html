@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ניוזלטר ספיד</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='14' width='56' height='40' rx='9' fill='%232f6f5e'/%3E%3Cpath d='M8 20l24 17 24-17' fill='none' stroke='%23eaf3ef' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M8 48l17-15' fill='none' stroke='%23256153' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M56 48L39 33' fill='none' stroke='%23256153' stroke-width='3' stroke-linecap='round'/%3E%3Cg transform='rotate(45 46 22)'%3E%3Crect x='42' y='2' width='8' height='30' rx='3' fill='%23fdf6ea'/%3E%3Cpath d='M42 32h8l-4 9z' fill='%23e8a33d'/%3E%3Crect x='42' y='2' width='8' height='7' rx='2' fill='%232f6f5e'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg: #f4faf7;
+    --panel: #ffffff;
+    --ink: #1f2430;
+    --ink-soft: #5b6470;
+    --line: #dfe7e2;
+    --accent: #2f6f5e;
+    --accent-soft: #e7f0ec;
+    --danger: #b3492c;
+    --radius: 10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family: "Segoe UI", "Heebo", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-weight:500;
+  }
+  .icon{ display:inline-block; vertical-align:middle; }
+  header{
+    background: var(--ink);
+    color: #fff;
+    padding: 12px 22px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  header h1{ font-size: 17px; margin:0; font-weight:600; letter-spacing:.3px; }
+  header .sub{ font-size:12px; color:#c9c9c9; margin-top:2px; }
+  .top-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; position:relative; }
+  button{ cursor:pointer; font-family:inherit; }
+  .icon-btn{
+    border:1px solid #444;
+    background:#2b2f3a;
+    color:#fff;
+    border-radius:8px;
+    padding:8px 10px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:13px;
+  }
+  .icon-btn:hover{ background:#3a3f4d; }
+  .btn{
+    border:none; border-radius:8px; padding:9px 16px; font-size:13px; font-weight:600;
+    background: var(--accent); color:#fff; display:inline-flex; align-items:center; gap:7px;
+    transition: opacity .15s ease, transform .1s ease;
+  }
+  .btn:hover{ opacity:.9; }
+  .btn:active{ transform: scale(.97); }
+  .btn.secondary{ background:#3a3f4d; }
+  .btn.danger{ background: var(--danger); }
+  .btn.ghost{ background:transparent; border:1px solid var(--line); color: var(--ink); }
+
+  .tabsbar{
+    background:#2b2f3a;
+    padding:8px 22px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    border-top:1px solid #3a3f4d;
+  }
+  .tpl-tab{
+    display:flex; align-items:center; gap:6px;
+    background:#3a3f4d; color:#e5e7eb; border-radius:8px 8px 0 0;
+    padding:6px 10px; font-size:12.5px; cursor:pointer; border:1px solid transparent;
+  }
+  .tpl-tab.active{ background: var(--panel); color: var(--ink); border-color: var(--line); font-weight:600; }
+  .tpl-tab input{
+    background:transparent; border:none; color:inherit; font:inherit; font-weight:inherit;
+    width: 92px; padding:0;
+  }
+  .tpl-tab input:focus{ outline: 1px dashed var(--accent); }
+  .tpl-tab button{ background:transparent; border:none; color:inherit; opacity:.6; display:flex; }
+  .tpl-tab button:hover{ opacity:1; }
+  .tpl-add{
+    background:transparent; border:1px dashed #666; color:#ddd; border-radius:8px; padding:6px 10px;
+    display:flex; align-items:center; gap:5px; font-size:12.5px;
+  }
+  .tpl-add:hover{ border-color:#fff; color:#fff; }
+
+  .layout{
+    display:grid;
+    grid-template-columns: 280px minmax(0,1fr);
+    gap:16px;
+    padding:16px;
+    align-items:start;
+  }
+  .sidebar-left{ display:flex; flex-direction:column; gap:16px; min-width:0; }
+  .panel{ background: var(--panel); border-radius: var(--radius); border:1px solid var(--line); padding:14px; }
+  .panel h2{ font-size:13px; text-transform:uppercase; letter-spacing:.5px; color: var(--ink); font-weight:700; margin:0 0 10px 0; }
+  .add-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
+  .add-btn{
+    border:1px solid var(--line); background:#fbfaf7; border-radius:8px; padding:10px 6px;
+    font-size:12px; font-weight:600; text-align:center; color: var(--ink);
+    display:flex; flex-direction:column; align-items:center; gap:5px;
+  }
+  .add-btn:hover{ border-color: var(--accent); background: var(--accent-soft); }
+
+  .canvas-column{ display:flex; flex-direction:column; gap:16px; min-width:0; }
+  .canvas-wrap{
+    background: var(--panel); border-radius: var(--radius); border:1px solid var(--line);
+    min-height:70vh; padding:20px; display:flex; justify-content:center;
+  }
+  #canvasOuter{ width:100%; max-width:700px; }
+  #canvas{
+    box-shadow: 0 0 0 1px #eee, 0 10px 30px rgba(0,0,0,.05);
+    min-height:400px; padding:4px;
+  }
+  #canvas:empty::before{
+    content: "אין עדיין רכיבים - הוסיפו רכיב מהתפריט מימין";
+    display:block; text-align:center; color:#aaa; padding:60px 10px; font-size:14px;
+  }
+  .el-wrap{ position:relative; border:1px dashed transparent; margin: 1px 0; }
+  .el-wrap:hover{ border-color:#cfd6d3; }
+  .el-wrap.selected{ border-color: var(--accent); }
+  .el-toolbar{
+    position:absolute; top:-14px; left:6px; display:none; gap:2px;
+    background: var(--ink); border-radius:6px; overflow:hidden; z-index:6;
+    box-shadow:0 2px 8px rgba(0,0,0,.2);
+  }
+  .el-wrap:hover .el-toolbar, .el-wrap.selected .el-toolbar{ display:flex; }
+  .el-toolbar button{ border:none; background:transparent; color:#fff; padding:5px 6px; display:flex; }
+  .el-toolbar button:hover{ background: rgba(255,255,255,.15); }
+  .el-toolbar button.danger:hover{ background: var(--danger); }
+  .rich-text{ font-weight:400; }
+  [contenteditable=true]{ outline: none; }
+  [contenteditable=true]:focus{ box-shadow: inset 0 0 0 1px var(--accent-soft); }
+
+  .row-block{ display:flex; align-items:stretch; }
+  .row-col{ position:relative; min-width:40px; padding:4px 6px; }
+  .row-col.empty{ min-height:60px; border:1px dashed #d8d5cc; border-radius:6px; display:flex; align-items:center; justify-content:center; }
+  .col-handle{ width:10px; cursor:col-resize; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
+  .col-handle::before{ content:""; width:2px; height:70%; background: var(--line); border-radius:2px; }
+  .col-handle:hover::before{ background: var(--accent); }
+  .col-add-wrap{ position:relative; margin-top:6px; text-align:center; }
+  .col-add-btn{
+    border:1px dashed #cfd6d3; background:#fbfaf7; color: var(--ink-soft); border-radius:6px;
+    padding:5px 10px; font-size:11.5px; display:inline-flex; align-items:center; gap:5px;
+  }
+  .col-add-btn:hover{ border-color: var(--accent); color: var(--accent); }
+  .col-add-menu{
+    position:absolute; z-index:20; top:calc(100% + 4px); right:0; background:#fff; border:1px solid var(--line);
+    border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.15); display:none; padding:6px; width:170px;
+  }
+  .col-add-menu.open{ display:block; }
+  .col-add-menu button{
+    display:flex; align-items:center; gap:8px; width:100%; text-align:right; background:none; border:none;
+    padding:7px 8px; font-size:12.5px; border-radius:6px; color: var(--ink);
+  }
+  .col-add-menu button:hover{ background: var(--accent-soft); }
+
+  .sel-toolbar{
+    position:fixed; z-index:60; background: var(--ink); border-radius:8px; padding:4px; display:none;
+    gap:2px; box-shadow:0 6px 20px rgba(0,0,0,.25);
+  }
+  .sel-toolbar.show{ display:flex; }
+  .sel-toolbar button{ border:none; background:transparent; color:#fff; padding:6px 7px; border-radius:5px; display:flex; }
+  .sel-toolbar button:hover{ background: rgba(255,255,255,.18); }
+  .sel-toolbar button.active{ background: var(--accent); }
+  .sel-toolbar .sep{ width:1px; background:#555; margin:3px 2px; }
+
+  .prop-row{ margin-bottom:10px; }
+  .prop-row label{ display:block; font-size:11.5px; font-weight:600; color: var(--ink-soft); margin-bottom:4px; }
+  .prop-row input[type=text], .prop-row input[type=number], .prop-row input[type=url], .prop-row textarea{
+    width:100%; padding:7px 8px; border:1px solid var(--line); border-radius:6px; font-size:13px; font-family:inherit;
+  }
+  .prop-row textarea{ resize:vertical; min-height:44px; }
+  .prop-row input[type=color]{ width:100%; height:32px; border:1px solid var(--line); border-radius:6px; padding:2px; }
+  .bgfield{ display:flex; gap:6px; align-items:center; }
+  .bgfield input[type=color]{ flex:1; }
+  .bgfield button{ border:1px solid var(--line); background:#fff; border-radius:6px; padding:0 8px; height:32px; font-size:11px; color:var(--ink-soft); white-space:nowrap; }
+  .prop-inline{ display:flex; gap:8px; }
+  .prop-inline > div{ flex:1; }
+  .seg{ display:flex; border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+  .seg button{ flex:1; border:none; background:#fff; padding:6px 2px; font-size:11px; color: var(--ink-soft); border-left:1px solid var(--line); display:flex; align-items:center; justify-content:center; }
+  .seg button:last-child{ border-left:none; }
+  .seg button.active{ background: var(--accent); color:#fff; }
+  .checkline{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-soft); }
+  .empty-props{ color: var(--ink-soft); font-size:13px; text-align:center; padding:30px 8px; }
+  .hint{ font-size:11.5px; font-weight:600; color: var(--ink-soft); background:#f0f6f2; border-radius:6px; padding:8px 9px; line-height:1.6; margin-bottom:10px; }
+  .col-list{ display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
+  .col-list-row{ display:flex; align-items:center; gap:6px; font-size:12px; }
+  .col-list-row input{ width:60px; padding:5px 6px; border:1px solid var(--line); border-radius:5px; }
+
+  .footer-export{
+    background: var(--panel); border:1px solid var(--line); border-radius: var(--radius);
+    padding:14px 20px; display:flex; align-items:center; justify-content:center; gap:22px; flex-wrap:wrap;
+    max-width:640px; margin:0 auto; width:100%;
+  }
+  .footer-export p{ margin:0; font-size:13px; font-weight:600; color: var(--ink-soft); line-height:1.6; max-width:420px; }
+  .footer-export strong{ color: var(--ink); }
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform: translateX(-50%); background: var(--ink); color:#fff;
+    padding:10px 18px; border-radius:8px; font-size:13px; opacity:0; pointer-events:none;
+    transition: opacity .25s ease, transform .25s ease; z-index:70;
+  }
+  .toast.show{ opacity:1; transform: translateX(-50%) translateY(-6px); }
+  @media (max-width: 980px){ .layout{ grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>ניוזלטר ספיד</h1>
+    <div class="sub">עיצוב ניוזלטרים במהירות ובקלות</div>
+  </div>
+  <div class="top-actions">
+    <button class="btn danger" id="clearBtn">
+      <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      ניקוי תבנית
+    </button>
+  </div>
+</header>
+
+<div class="tabsbar" id="tabsBar"></div>
+
+<div class="layout">
+
+  <div class="sidebar-left">
+    <div class="panel">
+      <h2>הוספת רכיב</h2>
+      <div class="add-grid">
+        <button class="add-btn" data-type="heading">
+          <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+          כותרת
+        </button>
+        <button class="add-btn" data-type="paragraph">
+          <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+          פסקה
+        </button>
+        <button class="add-btn" data-type="image">
+          <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          תמונה
+        </button>
+        <button class="add-btn" data-type="button">
+          <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="8" rx="4"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+          כפתור
+        </button>
+        <button class="add-btn" data-type="row">
+          <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
+          שורת טורים
+        </button>
+        <button class="add-btn" data-type="divider">
+          <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          קו מפריד
+        </button>
+        <button class="add-btn" data-type="spacer">
+          <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 18 12 22 16 18"/><polyline points="8 6 12 2 16 6"/><line x1="12" y1="2" x2="12" y2="22"/></svg>
+          מרווח
+        </button>
+        <button class="add-btn" data-type="footer">
+          <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg>
+          כותרת תחתונה
+        </button>
+      </div>
+      <div class="hint" style="margin-top:12px;">
+        טיפ: סמנו טקסט בתוך כותרת, פסקה או כותרת תחתונה כדי לפתוח סרגל עיצוב (הדגשה, קישור, צבע ועוד). לכל בלוק אפשר גם להוסיף מסגרת דרך פאנל המאפיינים.
+      </div>
+    </div>
+
+    <div class="panel" id="propsPanel">
+      <h2>מאפייני רכיב</h2>
+      <div id="propsBody"><div class="empty-props">בחרו רכיב בעורך כדי לערוך את מאפייניו</div></div>
+    </div>
+
+    <div class="panel" id="canvasSettingsPanel">
+      <h2>עיצוב הניוזלטר</h2>
+      <div class="prop-row"><label>רקע החוץ (מאחורי הניוזלטר)</label><input type="color" id="setCanvasBg"></div>
+      <div class="prop-row"><label>רקע תוכן הניוזלטר</label><input type="color" id="setContentBg"></div>
+      <div class="prop-row"><label>רוחב הניוזלטר (פיקסלים)</label><input type="number" id="setWidth" min="400" max="800"></div>
+      <div class="prop-row"><label>מסגרת מסביב לניוזלטר</label>
+        <div class="prop-inline">
+          <div><input type="number" id="setBorderWidth" min="0" max="12" placeholder="עובי"></div>
+          <div><input type="color" id="setBorderColor"></div>
+        </div>
+      </div>
+      <div class="prop-row"><label>עיגול פינות המסגרת</label><input type="number" id="setBorderRadius" min="0" max="40"></div>
+    </div>
+  </div>
+
+  <div class="canvas-column">
+    <div class="canvas-wrap">
+      <div id="canvasOuter">
+        <div id="canvas"></div>
+      </div>
+    </div>
+
+    <div class="footer-export">
+      <p>
+        לחצו על <strong>העתקת HTML</strong>, פתחו מייל חדש בג'ימייל / אאוטלוק וכו', לחצו בגוף ההודעה והדביקו (Ctrl+V).<br>
+        כל תבנית נשמרת אוטומטית בדפדפן הזה בנפרד - אפשר לעבור בין תבניות בכרטיסיות שלמעלה.
+      </p>
+      <button class="btn" id="copyBtn" style="font-size:15px; padding:12px 26px;">
+        <svg class="icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+        העתקת HTML למייל
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="sel-toolbar" id="selToolbar"></div>
+<input type="color" id="hiddenColorPicker" style="position:fixed; opacity:0; pointer-events:none; width:1px; height:1px; top:-99px;">
+
+<!-- ===== מודאל הוראות לביקור ראשון (HTML + CSS + JS) ===== -->
+<style>
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .modal-box {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    border: 1px solid #e2e8f0;
+    line-height: 1.6;
+    color: #1e293b;
+    direction: rtl;
+    text-align: right;
+  }
+  .modal-box h2 {
+    margin-top: 0;
+    color: var(--accent);
+    font-size: 20px;
+  }
+  .modal-box ul {
+    padding-right: 20px;
+    margin: 15px 0;
+  }
+  .modal-box li {
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .modal-footer {
+    margin-top: 20px;
+    text-align: left;
+  }
+  .modal-btn {
+    background: var(--accent);
+    color: #ffffff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .modal-btn:hover {
+    background: var(--accent);
+  }
+</style>
+
+<div class="modal-overlay" id="instructionsModal">
+  <div class="modal-box">
+    <h2>ברוכים הבאים לניוזלטר ספיד! 👋</h2>
+    <p>הנה כמה טיפים קצרים להתחלה מהירה:</p>
+    <ul>
+      <li><strong>הוספת רכיבים:</strong> בחרו רכיב מסרגל הכלים מימין כדי להוסיף אותו לניוזלטר.</li>
+      <li><strong>עריכת טקסט:</strong> לחצו ישירות על הטקסט בעורך כדי לשנות אותו. סמנו טקסט כדי לפתוח סרגל עיצוב מהיר.</li>
+      <li><strong>מאפיינים:</strong> לחצו על רכיב כדי לשנות צבעים, גודל גופן, מסגרות ועוד בפאנל המאפיינים.</li>
+      <li><strong>הגדרות כלליות:</strong> שנו את הרקע והמסגרת של הניוזלטר בסרגל הימני התחתון "עיצוב הניוזלטר".</li>
+      <li><strong>ייצוא:</strong> בסיום, לחצו על "העתקת HTML למייל" והדביקו (Ctrl+V) ישירות בתוך גוף המייל שלכם.</li>
+    </ul>
+    <div class="modal-footer">
+      <button class="modal-btn" id="closeModalBtn">הבנתי, בואו נתחיל!</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('instructionsModal');
+    const closeBtn = document.getElementById('closeModalBtn');
+    
+    // בדיקה אם המשתמש כבר ביקר באתר בעבר
+    const hasVisited = localStorage.getItem('nl_builder_visited');
+    
+    if (!hasVisited) {
+      // הצגת המודאל בכניסה הראשונה
+      modal.classList.add('open');
+      
+      closeBtn.addEventListener('click', function() {
+        modal.classList.remove('open');
+        // שמירת חיווי שהמשתמש כבר ראה את ההוראות
+        localStorage.setItem('nl_builder_visited', 'true');
+      });
+    }
+  });
+</script>
+
+<script>
+(function(){
+
+  // ================= ICONS =================
+  const ICONS = {
+    up: '<polyline points="18 15 12 9 6 15"/>',
+    down: '<polyline points="6 9 12 15 18 9"/>',
+    dup: '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+    del: '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
+    plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+    pencil: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+    x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+    bold: '<path d="M6 4h6a3.5 3.5 0 0 1 0 7H6z"/><path d="M6 11h7a3.5 3.5 0 0 1 0 7H6z"/>',
+    italic: '<line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/>',
+    underline: '<path d="M6 3v7a6 6 0 0 0 12 0V3"/><line x1="4" y1="21" x2="20" y2="21"/>',
+    strike: '<line x1="5" y1="12" x2="19" y2="12"/><path d="M8 6a4 4 0 0 1 4-1.5c2 0 4 1 4 3"/><path d="M16 18a4 4 0 0 1-4 1.5c-2 0-4-1-4-3"/>',
+    link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    droplet: '<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>',
+    highlighter: '<path d="M12 20h9"/><path d="M4 20l2-6 8-8 4 4-8 8-6 2z"/>',
+    clear: '<path d="M4 20h16"/><path d="M6 16l8-12 6 4-8 12z"/><line x1="9" y1="8" x2="16" y2="14"/>',
+    alignRight: '<line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/>',
+    alignCenter: '<line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/>',
+    alignLeft: '<line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/>',
+    alignJustify: '<line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/>',
+  };
+  function ic(name, size){
+    size = size || 15;
+    return `<svg class="icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]||''}</svg>`;
+  }
+
+  // ================= STATE =================
+  const STORE_KEY = 'nl_builder_store_v3';
+  let store = null;         // { activeId, templates: [{id,name,elements,settings}] }
+  let elements = [];        // reference to active template's elements
+  let settings = {};        // reference to active template's settings
+  let selectedId = null;
+  const uid = () => 'el_' + Math.random().toString(36).slice(2,9);
+
+  function defaultSettings(){
+    return { canvasBg:'#f4faf7', contentBg:'#ffffff', width:600, borderWidth:0, borderColor:'#2f6f5e', borderRadius:0 };
+  }
+
+  const defaultsByType = {
+    heading: () => ({ html:'כותרת חדשה', fontSize:26, color:'#1f2430', align:'right', bg:'transparent', borderWidth:0, borderColor:'#2f6f5e', radius:0, padding:8 }),
+    paragraph: () => ({ html:'זהו טקסט לדוגמה. לחצו כדי לערוך ישירות כאן, וסמנו קטע כדי לעצב או להוסיף קישור.', fontSize:15, color:'#333333', align:'right', lineHeight:1.6, bg:'transparent', borderWidth:0, borderColor:'#2f6f5e', radius:0, padding:8 }),
+    image: () => ({ src:'https://placehold.co/560x220?text=%D7%94%D7%A2%D7%9C%D7%95+%D7%AA%D7%9E%D7%95%D7%A0%D7%94', alt:'תמונה', width:100, align:'center', link:'', radius:6 }),
+    button: () => ({ text:'לחצו כאן', url:'https://', bgColor:'#2f6f5e', textColor:'#ffffff', fontSize:15, paddingV:12, paddingH:26, radius:6, align:'center', borderWidth:0, borderColor:'#000000', bold:true }),
+    divider: () => ({ color:'#e3e0d8', thickness:1, marginV:16 }),
+    spacer: () => ({ height:24 }),
+    footer: () => ({ html:'עוצב באמצעות מערכת ניולטר ספיד', color:'#8a8f98', fontSize:12, align:'center', bg:'transparent', borderWidth:0, borderColor:'#2f6f5e', radius:0, padding:8 }),
+  };
+  const RICH_TYPES = ['heading','paragraph','footer'];
+  const typeLabels = { heading:'כותרת', paragraph:'פסקה', image:'תמונה', button:'כפתור', row:'שורת טורים', divider:'קו מפריד', spacer:'מרווח', footer:'כותרת תחתונה' };
+
+  function makeRow(){
+    return { id: uid(), type:'row', props:{ bg:'transparent', gap:16, padding:0 },
+      cols: [ {id:uid(), weight:1, elements:[]}, {id:uid(), weight:1, elements:[]} ] };
+  }
+
+  // ================= PERSISTENCE =================
+  function loadStore(){
+    try{
+      const raw = localStorage.getItem(STORE_KEY);
+      if(raw){ store = JSON.parse(raw); }
+    }catch(e){ store = null; }
+    if(!store || !store.templates || !store.templates.length){
+      const t = { id: uid(), name:'תבנית 1', elements: [], settings: defaultSettings() };
+      store = { activeId: t.id, templates: [t] };
+    }
+    // migrate missing settings / props from older versions
+    store.templates.forEach(t=>{
+      t.settings = Object.assign(defaultSettings(), t.settings||{});
+      const migrateEl = (el)=>{
+        if(el.type==='row'){ el.cols.forEach(c=>c.elements.forEach(migrateEl)); return; }
+        if(['heading','paragraph','footer'].includes(el.type)){
+          if(el.props.borderWidth===undefined) el.props.borderWidth = 0;
+          if(el.props.borderColor===undefined) el.props.borderColor = '#2f6f5e';
+          if(el.props.radius===undefined) el.props.radius = 0;
+          if(el.props.padding===undefined) el.props.padding = 8;
+        }
+      };
+      (t.elements||[]).forEach(migrateEl);
+    });
+    // drop legacy standalone frame/link/columns2 blocks from very old saves
+    store.templates.forEach(t=>{
+      t.elements = (t.elements||[]).filter(el=> el.type!=='frame' && el.type!=='link' && el.type!=='columns2');
+    });
+    if(!store.templates.find(t=>t.id===store.activeId)) store.activeId = store.templates[0].id;
+  }
+  function persist(){
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(store)); }catch(e){}
+  }
+  function setActiveRefs(){
+    const t = store.templates.find(t=>t.id===store.activeId);
+    elements = t.elements;
+    settings = t.settings;
+  }
+  function nextTemplateName(){
+    let max = 0;
+    store.templates.forEach(t=>{
+      const m = /^תבנית (\d+)$/.exec(t.name);
+      if(m) max = Math.max(max, parseInt(m[1],10));
+    });
+    return 'תבנית ' + (max+1);
+  }
+
+  // ================= LOOKUP HELPERS (supports nested row columns) =================
+  function findLocation(id){
+    let idx = elements.findIndex(e=>e.id===id);
+    if(idx>=0) return { arr: elements, idx };
+    for(const el of elements){
+      if(el.type==='row'){
+        for(const col of el.cols){
+          idx = col.elements.findIndex(e=>e.id===id);
+          if(idx>=0) return { arr: col.elements, idx };
+        }
+      }
+    }
+    return null;
+  }
+  function findElement(id){ const loc = findLocation(id); return loc ? loc.arr[loc.idx] : null; }
+
+  // ================= ELEMENT OPS =================
+  function addElement(type, targetArr){
+    const el = type==='row' ? makeRow() : { id: uid(), type, props: defaultsByType[type]() };
+    (targetArr || elements).push(el);
+    selectedId = el.id;
+    renderAll(); persist();
+  }
+  function deleteElement(id){
+    const loc = findLocation(id);
+    if(!loc) return;
+    loc.arr.splice(loc.idx,1);
+    if(selectedId===id) selectedId=null;
+    renderAll(); persist();
+  }
+  function duplicateElement(id){
+    const loc = findLocation(id);
+    if(!loc) return;
+    const copy = JSON.parse(JSON.stringify(loc.arr[loc.idx]));
+    (function reid(node){ node.id = uid(); if(node.cols) node.cols.forEach(c=>{ c.id=uid(); c.elements.forEach(reid); }); })(copy);
+    loc.arr.splice(loc.idx+1,0,copy);
+    selectedId = copy.id;
+    renderAll(); persist();
+  }
+  function moveElement(id, dir){
+    const loc = findLocation(id);
+    if(!loc) return;
+    const swap = loc.idx + dir;
+    if(swap<0 || swap>=loc.arr.length) return;
+    [loc.arr[loc.idx], loc.arr[swap]] = [loc.arr[swap], loc.arr[loc.idx]];
+    renderAll(); persist();
+  }
+  function updateProp(id, key, value, skipRender){
+    const el = findElement(id);
+    if(!el) return;
+    el.props[key] = value;
+    persist();
+    if(!skipRender) applyStyleOnly(id);
+  }
+
+  // ================= STYLE-ONLY UPDATE (no full re-render, preserves editing cursor) =================
+  function styleStringFor(el){
+    const p = el.props;
+    const align = alignCss(p.align);
+    const border = (p.borderWidth>0) ? `border:${p.borderWidth}px solid ${p.borderColor};border-radius:${p.radius}px;` : '';
+    switch(el.type){
+      case 'heading': return `font-size:${p.fontSize}px;color:${p.color};text-align:${align};font-family:Arial,sans-serif;background:${bgCss(p.bg)};padding:${p.padding}px;${border}`;
+      case 'paragraph': return `font-size:${p.fontSize}px;color:${p.color};text-align:${align};line-height:${p.lineHeight};font-family:Arial,sans-serif;background:${bgCss(p.bg)};padding:${p.padding}px;${border}`;
+      case 'footer': return `color:${p.color};font-size:${p.fontSize}px;text-align:${align};font-family:Arial,sans-serif;background:${bgCss(p.bg)};padding:${p.padding}px;${border}`;
+      default: return '';
+    }
+  }
+  function applyStyleOnly(id){
+    const node = document.querySelector(`[data-content-id="${id}"]`);
+    const el = findElement(id);
+    if(node && el && RICH_TYPES.includes(el.type)){
+      node.style.cssText = styleStringFor(el);
+      return;
+    }
+    // for non rich-text prop changes (image/button/divider/spacer) just re-render fully (cheap, no cursor risk)
+    renderCanvas();
+  }
+
+  function alignCss(a){ return (a==='left'||a==='center'||a==='justify') ? a : 'right'; }
+  function bgCss(v){ return (!v || v==='transparent') ? 'transparent' : v; }
+
+  // ================= CANVAS RENDER =================
+  function buildToolbar(el){
+    const bar = document.createElement('div');
+    bar.className = 'el-toolbar';
+    bar.innerHTML = `
+      <button data-act="up" title="הזזה למעלה">${ic('up')}</button>
+      <button data-act="down" title="הזזה למטה">${ic('down')}</button>
+      <button data-act="dup" title="שכפול">${ic('dup')}</button>
+      <button data-act="del" class="danger" title="מחיקה">${ic('del')}</button>
+    `;
+    bar.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click',(ev)=>{
+        ev.stopPropagation();
+        const act = btn.dataset.act;
+        if(act==='up') moveElement(el.id,-1);
+        if(act==='down') moveElement(el.id,1);
+        if(act==='dup') duplicateElement(el.id);
+        if(act==='del') deleteElement(el.id);
+      });
+    });
+    return bar;
+  }
+
+  function selectHandler(el, wrap){
+    wrap.addEventListener('click', (ev)=>{
+      ev.stopPropagation();
+      selectedId = el.id;
+      document.querySelectorAll('.el-wrap').forEach(w=>w.classList.remove('selected'));
+      wrap.classList.add('selected');
+      renderProps();
+    });
+  }
+
+  function buildElNode(el){
+    const wrap = document.createElement('div');
+    wrap.className = 'el-wrap' + (el.id===selectedId ? ' selected' : '');
+    wrap.dataset.id = el.id;
+    wrap.appendChild(buildToolbar(el));
+
+    if(el.type === 'row'){
+      wrap.appendChild(buildRowNode(el));
+      selectHandlerRowOnly(el, wrap);
+      return wrap;
+    }
+
+    const content = document.createElement('div');
+    content.style.padding = '6px 10px';
+    const p = el.props;
+
+    if(RICH_TYPES.includes(el.type)){
+      const node = document.createElement('div');
+      node.className = 'rich-text';
+      node.dataset.contentId = el.id;
+      node.contentEditable = 'true';
+      node.style.cssText = styleStringFor(el);
+      node.innerHTML = p.html;
+      node.addEventListener('input', ()=>{ el.props.html = node.innerHTML; persist(); });
+      content.appendChild(node);
+    } else if(el.type === 'image'){
+      const holder = document.createElement('div');
+      holder.style.textAlign = alignCss(p.align);
+      const img = document.createElement('img');
+      img.src = p.src; img.alt = p.alt;
+      img.style.cssText = `width:${p.width}%; max-width:100%; border-radius:${p.radius}px; display:inline-block;`;
+      holder.appendChild(img);
+      content.appendChild(holder);
+    } else if(el.type === 'button'){
+      const holder = document.createElement('div');
+      holder.style.textAlign = alignCss(p.align);
+      const btn = document.createElement('span');
+      btn.contentEditable = 'true';
+      btn.textContent = p.text;
+      btn.style.cssText = `display:inline-block; background:${p.bgColor}; color:${p.textColor}; font-size:${p.fontSize}px; font-weight:${p.bold?'700':'400'}; padding:${p.paddingV}px ${p.paddingH}px; border-radius:${p.radius}px; border:${p.borderWidth}px solid ${p.borderColor}; font-family:Arial,sans-serif; cursor:text;`;
+      btn.addEventListener('input', ()=>{ el.props.text = btn.textContent; persist(); });
+      holder.appendChild(btn);
+      content.appendChild(holder);
+    } else if(el.type === 'divider'){
+      const hr = document.createElement('div');
+      hr.style.cssText = `border-top:${p.thickness}px solid ${p.color}; margin:${p.marginV}px 0;`;
+      content.appendChild(hr);
+    } else if(el.type === 'spacer'){
+      const sp = document.createElement('div');
+      sp.style.height = p.height+'px';
+      content.appendChild(sp);
+    }
+
+    wrap.appendChild(content);
+    selectHandler(el, wrap);
+    return wrap;
+  }
+
+  function selectHandlerRowOnly(el, wrap){
+    // clicking the row background (not a child block) selects the row itself
+    wrap.addEventListener('click', (ev)=>{
+      if(ev.target.closest('.el-wrap') !== wrap) return; // let nested handle its own
+      ev.stopPropagation();
+      selectedId = el.id;
+      document.querySelectorAll('.el-wrap').forEach(w=>w.classList.remove('selected'));
+      wrap.classList.add('selected');
+      renderProps();
+    });
+  }
+
+  function buildRowNode(rowEl){
+    const row = document.createElement('div');
+    row.className = 'row-block';
+    row.style.cssText = `background:${bgCss(rowEl.props.bg)}; padding:${rowEl.props.padding}px; gap:${rowEl.props.gap}px;`;
+    rowEl.cols.forEach((col, i)=>{
+      const colNode = document.createElement('div');
+      colNode.className = 'row-col' + (col.elements.length===0 ? ' empty' : '');
+      colNode.style.flex = `${col.weight} 1 0`;
+      colNode.dataset.colId = col.id;
+
+      if(col.elements.length === 0){
+        colNode.appendChild(buildColAddButton(col));
+      } else {
+        col.elements.forEach(child=>{
+          colNode.appendChild(buildElNode(child));
+        });
+        const addWrap = document.createElement('div');
+        addWrap.className = 'col-add-wrap';
+        addWrap.appendChild(buildColAddButton(col));
+        colNode.appendChild(addWrap);
+      }
+      row.appendChild(colNode);
+
+      if(i < rowEl.cols.length - 1){
+        const handle = document.createElement('div');
+        handle.className = 'col-handle';
+        attachColDrag(handle, rowEl, col, rowEl.cols[i+1], colNode);
+        row.appendChild(handle);
+      }
+    });
+    return row;
+  }
+
+  function buildColAddButton(col){
+    const wrap = document.createElement('div');
+    wrap.style.position = 'relative';
+    wrap.style.textAlign = 'center';
+    const btn = document.createElement('button');
+    btn.className = 'col-add-btn';
+    btn.innerHTML = ic('plus',13) + ' הוספת רכיב';
+    const menu = document.createElement('div');
+    menu.className = 'col-add-menu';
+    const types = ['heading','paragraph','image','button','divider','spacer','footer'];
+    menu.innerHTML = types.map(t=>`<button data-type="${t}">${typeLabels[t]}</button>`).join('');
+    btn.addEventListener('click',(ev)=>{
+      ev.stopPropagation();
+      document.querySelectorAll('.col-add-menu.open').forEach(m=>{ if(m!==menu) m.classList.remove('open'); });
+      menu.classList.toggle('open');
+    });
+    menu.querySelectorAll('button').forEach(b=>{
+      b.addEventListener('click',(ev)=>{
+        ev.stopPropagation();
+        addElement(b.dataset.type, col.elements);
+        menu.classList.remove('open');
+      });
+    });
+    wrap.appendChild(btn);
+    wrap.appendChild(menu);
+    return wrap;
+  }
+
+  function attachColDrag(handle, rowEl, colA, colB, colANode){
+    handle.addEventListener('mousedown', (ev)=>{
+      ev.preventDefault();
+      const rowNode = handle.parentElement;
+      const colBNode = colANode.nextElementSibling.nextElementSibling; // handle then colB
+      const rectA = colANode.getBoundingClientRect();
+      const rectB = colBNode.getBoundingClientRect();
+      const startX = ev.clientX;
+      const totalPx = rectA.width + rectB.width;
+      const totalWeight = colA.weight + colB.weight;
+      const aIsLeftVisually = rectA.left < rectB.left;
+
+      function onMove(e){
+        let deltaPx = e.clientX - startX;
+        if(!aIsLeftVisually) deltaPx = -deltaPx;
+        let newAWidth = rectA.width + deltaPx;
+        newAWidth = Math.max(40, Math.min(totalPx-40, newAWidth));
+        const newBWidth = totalPx - newAWidth;
+        const newWeightA = (newAWidth / totalPx) * totalWeight;
+        const newWeightB = (newBWidth / totalPx) * totalWeight;
+        colANode.style.flex = `${newWeightA} 1 0`;
+        colBNode.style.flex = `${newWeightB} 1 0`;
+        colANode.dataset._pendingWeight = newWeightA;
+        colBNode.dataset._pendingWeight = newWeightB;
+      }
+      function onUp(){
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        if(colANode.dataset._pendingWeight){
+          colA.weight = parseFloat(colANode.dataset._pendingWeight);
+          colB.weight = parseFloat(colBNode.dataset._pendingWeight);
+          persist();
+        }
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  }
+
+  function renderCanvas(){
+    const canvas = document.getElementById('canvas');
+    canvas.style.background = bgCss(settings.contentBg);
+    canvas.style.border = (settings.borderWidth>0) ? `${settings.borderWidth}px solid ${settings.borderColor}` : 'none';
+    canvas.style.borderRadius = (settings.borderRadius||0) + 'px';
+    document.getElementById('canvasOuter').style.maxWidth = settings.width + 'px';
+    canvas.innerHTML = '';
+    elements.forEach(el=> canvas.appendChild(buildElNode(el)));
+    document.querySelector('.canvas-wrap').style.background = bgCss(settings.canvasBg);
+  }
+
+  // ================= PROPERTIES PANEL =================
+  function escapeHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function fieldSingle(el,key,label,type){
+    type = type || 'text';
+    return `<div class="prop-row"><label>${label}</label><input type="${type}" data-key="${key}" value="${escapeHtml(el.props[key]??'')}"></div>`;
+  }
+  function fieldColor(el,key,label){
+    const v = el.props[key] && el.props[key]!=='transparent' ? el.props[key] : '#ffffff';
+    return `<div class="prop-row"><label>${label}</label><input type="color" data-key="${key}" value="${v}"></div>`;
+  }
+  function fieldBg(el,key,label){
+    const isTransparent = !el.props[key] || el.props[key]==='transparent';
+    const v = isTransparent ? '#ffffff' : el.props[key];
+    return `<div class="prop-row"><label>${label}</label>
+      <div class="bgfield">
+        <input type="color" data-bgkey="${key}" value="${v}">
+        <button type="button" data-clearbg="${key}">ללא רקע</button>
+      </div>
+    </div>`;
+  }
+  function fieldNumber(el,key,label,min,max){
+    return `<div class="prop-row"><label>${label}</label><input type="number" data-key="${key}" min="${min}" max="${max}" value="${el.props[key]}"></div>`;
+  }
+  function fieldAlign(el,key){
+    const opts = [['right','alignRight'],['center','alignCenter'],['left','alignLeft'],['justify','alignJustify']];
+    const btns = opts.map(([v,iconName])=>`<button type="button" data-key="${key}" data-val="${v}" class="${el.props[key]===v?'active':''}" title="${v}">${ic(iconName,15)}</button>`).join('');
+    return `<div class="prop-row"><label>יישור</label><div class="seg" data-segkey="${key}">${btns}</div></div>`;
+  }
+  function fieldCheck(el,key,label){
+    return `<div class="prop-row"><label class="checkline"><input type="checkbox" data-key="${key}" ${el.props[key]?'checked':''}> ${label}</label></div>`;
+  }
+
+  function renderRowProps(el){
+    let html = `<div class="hint">ניתן לגרור את המפריד בין הטורים בעורך כדי לשנות את הרוחב, וכן להוסיף רכיבים לתוך כל טור.</div>`;
+    html += fieldBg(el,'bg','צבע רקע לשורה');
+    html += `<div class="prop-inline">${fieldNumber(el,'gap','רווח בין הטורים',0,60)}${fieldNumber(el,'padding','ריפוד חיצוני',0,60)}</div>`;
+    html += `<div class="prop-row"><label>מספר טורים</label>
+      <div style="display:flex; gap:8px;">
+        <button class="btn ghost" id="addColBtn" type="button" style="flex:1;">${ic('plus',14)} הוספת טור</button>
+        <button class="btn ghost" id="removeColBtn" type="button" style="flex:1;">${ic('x',14)} הסרת טור</button>
+      </div>
+    </div>`;
+    html += `<div class="prop-row"><label>איזון רוחב הטורים</label><button class="btn secondary" id="equalizeColsBtn" type="button" style="width:100%;">איזון שווה</button></div>`;
+    return html;
+  }
+
+  function renderProps(){
+    const body = document.getElementById('propsBody');
+    const el = findElement(selectedId);
+    if(!el){
+      body.innerHTML = '<div class="empty-props">בחרו רכיב בעורך כדי לערוך את מאפייניו</div>';
+      return;
+    }
+    let html = `<div style="font-size:12px; color:var(--ink-soft); margin-bottom:12px;">עריכת <strong style="color:var(--ink)">${typeLabels[el.type]}</strong></div>`;
+
+    if(el.type === 'row'){
+      html += renderRowProps(el);
+    } else {
+      switch(el.type){
+        case 'heading':
+          html += `<div class="hint">ערכו את הכותרת ישירות בעורך. סמנו טקסט כדי להדגיש, לשנות צבע או להוסיף קישור.</div>`;
+          html += `<div class="prop-inline">${fieldNumber(el,'fontSize','גודל גופן',10,60)}${fieldColor(el,'color','צבע טקסט')}</div>`;
+          html += fieldBg(el,'bg','צבע רקע לבלוק');
+          html += fieldAlign(el,'align');
+          html += `<div class="prop-inline">${fieldNumber(el,'borderWidth','עובי מסגרת',0,10)}${fieldColor(el,'borderColor','צבע מסגרת')}</div>`;
+          html += `<div class="prop-inline">${fieldNumber(el,'radius','עיגול פינות',0,40)}${fieldNumber(el,'padding','ריפוד פנימי',0,60)}</div>`;
+          break;
+        case 'paragraph':
+          html += `<div class="hint">ערכו את הטקסט ישירות בעורך. סמנו קטע כדי לעצב או להוסיף קישור.</div>`;
+          html += `<div class="prop-inline">${fieldNumber(el,'fontSize','גודל גופן',8,40)}${fieldColor(el,'color','צבע טקסט')}</div>`;
+          html += fieldNumber(el,'lineHeight','גובה שורה (למשל 1.6)',1,3);
+          html += fieldBg(el,'bg','צבע רקע לבלוק');
+          html += fieldAlign(el,'align');
+          html += `<div class="prop-inline">${fieldNumber(el,'borderWidth','עובי מסגרת',0,10)}${fieldColor(el,'borderColor','צבע מסגרת')}</div>`;
+          html += `<div class="prop-inline">${fieldNumber(el,'radius','עיגול פינות',0,40)}${fieldNumber(el,'padding','ריפוד פנימי',0,60)}</div>`;
+          break;
+        case 'image':
+          html += fieldSingle(el,'src','כתובת התמונה (URL)','url');
+          html += fieldSingle(el,'alt','טקסט חלופי (alt)');
+          html += fieldSingle(el,'link','קישור בלחיצה על התמונה (אופציונלי)','url');
+          html += `<div class="prop-inline">${fieldNumber(el,'width','רוחב (%)',10,100)}${fieldNumber(el,'radius','עיגול פינות',0,40)}</div>`;
+          html += fieldAlign(el,'align');
+          break;
+        case 'button':
+          html += fieldSingle(el,'text','טקסט הכפתור');
+          html += fieldSingle(el,'url','קישור בלחיצה','url');
+          html += `<div class="prop-inline">${fieldColor(el,'bgColor','צבע רקע')}${fieldColor(el,'textColor','צבע טקסט')}</div>`;
+          html += `<div class="prop-inline">${fieldNumber(el,'fontSize','גודל גופן',8,40)}${fieldNumber(el,'radius','עיגול פינות',0,40)}</div>`;
+          html += `<div class="prop-inline">${fieldNumber(el,'paddingV','ריפוד אנכי',0,60)}${fieldNumber(el,'paddingH','ריפוד אופקי',0,80)}</div>`;
+          html += `<div class="prop-inline">${fieldNumber(el,'borderWidth','עובי מסגרת',0,10)}${fieldColor(el,'borderColor','צבע מסגרת')}</div>`;
+          html += fieldAlign(el,'align');
+          html += fieldCheck(el,'bold','טקסט מודגש');
+          break;
+        case 'divider':
+          html += `<div class="prop-inline">${fieldNumber(el,'thickness','עובי',1,10)}${fieldColor(el,'color','צבע')}</div>`;
+          html += fieldNumber(el,'marginV','מרווח אנכי',0,60);
+          break;
+        case 'spacer':
+          html += fieldNumber(el,'height','גובה (פיקסלים)',4,200);
+          break;
+        case 'footer':
+          html += `<div class="hint">סמנו טקסט כדי לעצב חלק ממנו בלבד.</div>`;
+          html += `<div class="prop-inline">${fieldNumber(el,'fontSize','גודל גופן',8,30)}${fieldColor(el,'color','צבע')}</div>`;
+          html += fieldBg(el,'bg','צבע רקע לבלוק');
+          html += fieldAlign(el,'align');
+          html += `<div class="prop-inline">${fieldNumber(el,'borderWidth','עובי מסגרת',0,10)}${fieldColor(el,'borderColor','צבע מסגרת')}</div>`;
+          html += `<div class="prop-inline">${fieldNumber(el,'radius','עיגול פינות',0,40)}${fieldNumber(el,'padding','ריפוד פנימי',0,60)}</div>`;
+          break;
+      }
+    }
+
+    body.innerHTML = html;
+
+    body.querySelectorAll('input[data-key]').forEach(inp=>{
+      const key = inp.dataset.key;
+      const evt = (inp.type === 'checkbox') ? 'change' : 'input';
+      inp.addEventListener(evt, ()=>{
+        let val = inp.type==='checkbox' ? inp.checked : inp.value;
+        if(inp.type==='number') val = Number(val);
+        updateProp(el.id, key, val);
+      });
+    });
+    body.querySelectorAll('input[data-bgkey]').forEach(inp=>{
+      const key = inp.dataset.bgkey;
+      inp.addEventListener('input', ()=>{ updateProp(el.id, key, inp.value); });
+    });
+    body.querySelectorAll('button[data-clearbg]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ updateProp(el.id, btn.dataset.clearbg, 'transparent'); renderProps(); });
+    });
+    body.querySelectorAll('.seg').forEach(seg=>{
+      const key = seg.dataset.segkey;
+      seg.querySelectorAll('button').forEach(b=>{
+        b.addEventListener('click', ()=>{
+          updateProp(el.id, key, b.dataset.val);
+          seg.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+          b.classList.add('active');
+        });
+      });
+    });
+
+    if(el.type==='row'){
+      const addBtn = document.getElementById('addColBtn');
+      const removeBtn = document.getElementById('removeColBtn');
+      const eqBtn = document.getElementById('equalizeColsBtn');
+      addBtn.addEventListener('click', ()=>{
+        if(el.cols.length>=4){ showToast('עד 4 טורים בשורה'); return; }
+        el.cols.push({ id:uid(), weight:1, elements:[] });
+        renderAll(); persist();
+      });
+      removeBtn.addEventListener('click', ()=>{
+        if(el.cols.length<=2){ showToast('נדרשים לפחות 2 טורים'); return; }
+        const last = el.cols[el.cols.length-1];
+        if(last.elements.length>0 && !confirm('הטור האחרון מכיל תוכן שיימחק. להמשיך?')) return;
+        el.cols.pop();
+        renderAll(); persist();
+      });
+      eqBtn.addEventListener('click', ()=>{
+        el.cols.forEach(c=>c.weight=1);
+        renderAll(); persist();
+      });
+    }
+  }
+
+  function renderAll(){ renderCanvas(); renderProps(); }
+
+  // ================= SELECTION FORMATTING TOOLBAR =================
+  const selToolbar = document.getElementById('selToolbar');
+  const hiddenColor = document.getElementById('hiddenColorPicker');
+  let savedRange = null;
+  let colorMode = null; // 'fore' | 'hilite'
+
+  function currentEditableRoot(node){
+    if(!node) return null;
+    let el = node.nodeType===1 ? node : node.parentElement;
+    while(el && el !== document.body){
+      if(el.classList && el.classList.contains('rich-text')) return el;
+      el = el.parentElement;
+    }
+    return null;
+  }
+
+  selToolbar.innerHTML = `
+    <button data-cmd="bold" title="הדגשה">${ic('bold')}</button>
+    <button data-cmd="italic" title="נטוי">${ic('italic')}</button>
+    <button data-cmd="underline" title="קו תחתון">${ic('underline')}</button>
+    <button data-cmd="strikeThrough" title="קו חוצה">${ic('strike')}</button>
+    <div class="sep"></div>
+    <button data-cmd="foreColor" title="צבע טקסט">${ic('droplet')}</button>
+    <button data-cmd="hiliteColor" title="צבע רקע לטקסט">${ic('highlighter')}</button>
+    <div class="sep"></div>
+    <button data-cmd="link" title="הוספת קישור">${ic('link')}</button>
+    <button data-cmd="removeFormat" title="ניקוי עיצוב">${ic('clear')}</button>
+  `;
+
+  selToolbar.querySelectorAll('button[data-cmd]').forEach(btn=>{
+    btn.addEventListener('mousedown', (ev)=>{ ev.preventDefault(); }); // keep selection
+    btn.addEventListener('click', (ev)=>{
+      ev.preventDefault();
+      const cmd = btn.dataset.cmd;
+      restoreSelection();
+      if(cmd==='foreColor' || cmd==='hiliteColor'){
+        colorMode = cmd;
+        saveSelection();
+        hiddenColor.click();
+        return;
+      }
+      if(cmd==='link'){
+        const url = prompt('כתובת הקישור:', 'https://');
+        if(url){ document.execCommand('createLink', false, url); }
+        syncActiveRichNode();
+        return;
+      }
+      document.execCommand(cmd, false, null);
+      syncActiveRichNode();
+    });
+  });
+
+  hiddenColor.addEventListener('input', ()=>{
+    restoreSelection();
+    if(colorMode){
+      document.execCommand(colorMode, false, hiddenColor.value);
+      syncActiveRichNode();
+    }
+  });
+
+  function saveSelection(){
+    const sel = window.getSelection();
+    if(sel && sel.rangeCount>0) savedRange = sel.getRangeAt(0).cloneRange();
+  }
+  function restoreSelection(){
+    if(savedRange){
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(savedRange);
+    }
+  }
+  function syncActiveRichNode(){
+    const sel = window.getSelection();
+    if(!sel || sel.rangeCount===0) return;
+    const root = currentEditableRoot(sel.anchorNode);
+    if(root){
+      const el = findElement(root.dataset.contentId);
+      if(el){ el.props.html = root.innerHTML; persist(); }
+    }
+  }
+
+  function updateToolbarState(){
+    selToolbar.querySelectorAll('button[data-cmd]').forEach(btn=>{
+      const cmd = btn.dataset.cmd;
+      if(['bold','italic','underline','strikeThrough'].includes(cmd)){
+        try{ btn.classList.toggle('active', document.queryCommandState(cmd)); }catch(e){}
+      }
+    });
+  }
+
+  document.addEventListener('selectionchange', ()=>{
+    const sel = window.getSelection();
+    if(!sel || sel.rangeCount===0 || sel.isCollapsed){
+      selToolbar.classList.remove('show');
+      return;
+    }
+    const root = currentEditableRoot(sel.anchorNode);
+    if(!root){ selToolbar.classList.remove('show'); return; }
+    saveSelection();
+    const rect = sel.getRangeAt(0).getBoundingClientRect();
+    if(rect.width===0 && rect.height===0){ selToolbar.classList.remove('show'); return; }
+    selToolbar.style.top = Math.max(8, rect.top - 46) + 'px';
+    selToolbar.style.left = Math.max(8, rect.left + rect.width/2 - 90) + 'px';
+    selToolbar.classList.add('show');
+    updateToolbarState();
+  });
+  document.addEventListener('mousedown', (ev)=>{
+    if(!selToolbar.contains(ev.target) && ev.target!==hiddenColor){
+      // allow toolbar interactions; hide only if clicking fully outside any relevant area on next selectionchange
+    }
+  });
+
+  // ================= EXPORT =================
+  function alignAttr(a){ return (a==='left'||a==='center'||a==='justify') ? a : 'right'; }
+
+  function blockToEmailRow(el){
+    const p = el.props;
+    switch(el.type){
+      case 'heading': {
+        const b = p.borderWidth>0 ? `border:${p.borderWidth}px solid ${p.borderColor}; border-radius:${p.radius}px;` : '';
+        return `<tr><td style="padding:10px 24px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="${b} background-color:${bgCss(p.bg)==='transparent'?'transparent':p.bg};">
+            <tr><td style="padding:${p.padding}px; text-align:${alignAttr(p.align)}; font-family:Arial,Helvetica,sans-serif; font-size:${p.fontSize}px; color:${p.color};">${p.html}</td></tr>
+          </table>
+        </td></tr>`;
+      }
+      case 'paragraph': {
+        const b = p.borderWidth>0 ? `border:${p.borderWidth}px solid ${p.borderColor}; border-radius:${p.radius}px;` : '';
+        return `<tr><td style="padding:8px 24px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="${b} background-color:${bgCss(p.bg)==='transparent'?'transparent':p.bg};">
+            <tr><td style="padding:${p.padding}px; text-align:${alignAttr(p.align)}; font-family:Arial,Helvetica,sans-serif; font-size:${p.fontSize}px; color:${p.color}; line-height:${p.lineHeight};">${p.html}</td></tr>
+          </table>
+        </td></tr>`;
+      }
+      case 'image': {
+        const img = `<img src="${escapeHtml(p.src)}" alt="${escapeHtml(p.alt)}" style="width:${p.width}%; max-width:560px; border-radius:${p.radius}px; display:block; margin:${p.align==='center'?'0 auto':(p.align==='left'?'0 auto 0 0':'0 0 0 auto')};" />`;
+        const wrapped = p.link ? `<a href="${escapeHtml(p.link)}">${img}</a>` : img;
+        return `<tr><td style="padding:8px 24px; text-align:${alignAttr(p.align)};">${wrapped}</td></tr>`;
+      }
+      case 'button':
+        return `<tr><td style="padding:14px 24px; text-align:${alignAttr(p.align)};">
+          <a href="${escapeHtml(p.url)}" style="background-color:${p.bgColor}; color:${p.textColor}; font-family:Arial,Helvetica,sans-serif; font-size:${p.fontSize}px; font-weight:${p.bold?'bold':'normal'}; text-decoration:none; padding:${p.paddingV}px ${p.paddingH}px; border-radius:${p.radius}px; border:${p.borderWidth}px solid ${p.borderColor}; display:inline-block;">${escapeHtml(p.text)}</a>
+        </td></tr>`;
+      case 'divider':
+        return `<tr><td style="padding:${p.marginV}px 24px;"><div style="border-top:${p.thickness}px solid ${p.color}; font-size:0; line-height:0;">&nbsp;</div></td></tr>`;
+      case 'spacer':
+        return `<tr><td style="height:${p.height}px; line-height:${p.height}px; font-size:0;">&nbsp;</td></tr>`;
+      case 'footer': {
+        const b = p.borderWidth>0 ? `border:${p.borderWidth}px solid ${p.borderColor}; border-radius:${p.radius}px;` : '';
+        return `<tr><td style="padding:16px 24px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="${b} background-color:${bgCss(p.bg)==='transparent'?'transparent':p.bg};">
+            <tr><td style="padding:${p.padding}px; text-align:${alignAttr(p.align)}; font-family:Arial,Helvetica,sans-serif; font-size:${p.fontSize}px; color:${p.color};">${p.html}</td></tr>
+          </table>
+        </td></tr>`;
+      }
+      case 'row': {
+        const cols = el.cols.map(col=>{
+          const inner = col.elements.map(blockToEmailRow).join('\n');
+          return `<td width="${Math.round(col.weight/el.cols.reduce((s,c)=>s+c.weight,0)*100)}%" style="vertical-align:top; padding:0 ${Math.round(el.props.gap/2)}px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${inner}</table>
+          </td>`;
+        }).join('');
+        return `<tr><td style="padding:${el.props.padding}px 24px; background-color:${bgCss(el.props.bg)==='transparent'?'transparent':el.props.bg};">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>${cols}</tr></table>
+        </td></tr>`;
+      }
+      default: return '';
+    }
+  }
+
+  function generateEmailHtml(){
+    const rows = elements.map(blockToEmailRow).join('\n');
+    const b = settings.borderWidth>0 ? `border:${settings.borderWidth}px solid ${settings.borderColor}; border-radius:${settings.borderRadius||0}px;` : '';
+    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${bgCss(settings.canvasBg)}; padding:24px 0;">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="${settings.width}" cellpadding="0" cellspacing="0" style="background-color:${bgCss(settings.contentBg)}; max-width:${settings.width}px; width:100%; ${b}">
+        ${rows}
+      </table>
+    </td>
+  </tr>
+</table>`;
+  }
+
+  // ================= TOAST =================
+  let toastTimer;
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+
+  // ================= COPY =================
+  async function copyEmailHtml(){
+    if(elements.length===0){ showToast('הוסיפו קודם רכיב לניוזלטר'); return; }
+    const html = generateEmailHtml();
+    try{
+      const blobHtml = new Blob([html], {type:'text/html'});
+      const blobText = new Blob([html], {type:'text/plain'});
+      if(navigator.clipboard && window.ClipboardItem){
+        await navigator.clipboard.write([ new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText }) ]);
+      } else {
+        await navigator.clipboard.writeText(html);
+      }
+      showToast('הועתק! עכשיו הדביקו (Ctrl+V) בגוף המייל');
+    }catch(e){
+      const holder = document.createElement('div');
+      holder.contentEditable = 'true';
+      holder.innerHTML = html;
+      holder.style.position='fixed'; holder.style.left='-9999px';
+      document.body.appendChild(holder);
+      const range = document.createRange();
+      range.selectNodeContents(holder);
+      const sel = window.getSelection();
+      sel.removeAllRanges(); sel.addRange(range);
+      try{ document.execCommand('copy'); showToast('הועתק! עכשיו הדביקו (Ctrl+V) בגוף המייל'); }
+      catch(err){ showToast('שגיאה בהעתקה - נסו שוב'); }
+      sel.removeAllRanges();
+      document.body.removeChild(holder);
+    }
+  }
+
+  // ================= TEMPLATE TABS =================
+  function renderTabs(){
+    const bar = document.getElementById('tabsBar');
+    bar.innerHTML = '';
+    store.templates.forEach(t=>{
+      const tab = document.createElement('div');
+      tab.className = 'tpl-tab' + (t.id===store.activeId ? ' active' : '');
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.value = t.name;
+      nameInput.readOnly = t.id !== store.activeId ? false : false;
+      nameInput.addEventListener('click',(ev)=>{ ev.stopPropagation(); });
+      nameInput.addEventListener('change', ()=>{
+        t.name = nameInput.value.trim() || t.name;
+        persist();
+      });
+      const pencil = document.createElement('button');
+      pencil.innerHTML = ic('pencil',12);
+      pencil.title = 'שינוי שם';
+      pencil.addEventListener('click',(ev)=>{ ev.stopPropagation(); nameInput.focus(); nameInput.select(); });
+      tab.appendChild(nameInput);
+      tab.appendChild(pencil);
+      if(store.templates.length>1){
+        const del = document.createElement('button');
+        del.innerHTML = ic('x',12);
+        del.title = 'מחיקת תבנית';
+        del.addEventListener('click',(ev)=>{
+          ev.stopPropagation();
+          if(confirm(`למחוק את התבנית "${t.name}"?`)){
+            store.templates = store.templates.filter(x=>x.id!==t.id);
+            if(store.activeId===t.id) store.activeId = store.templates[0].id;
+            persist(); setActiveRefs(); renderTabs(); renderAll();
+          }
+        });
+        tab.appendChild(del);
+      }
+      tab.addEventListener('click', ()=>{
+        store.activeId = t.id;
+        selectedId = null;
+        persist(); setActiveRefs(); renderTabs(); renderAll(); syncSettingsInputs();
+      });
+      bar.appendChild(tab);
+    });
+    const addBtn = document.createElement('button');
+    addBtn.className = 'tpl-add';
+    addBtn.innerHTML = ic('plus',13) + ' תבנית חדשה';
+    addBtn.addEventListener('click', ()=>{
+      const t = { id: uid(), name: nextTemplateName(), elements: [], settings: defaultSettings() };
+      store.templates.push(t);
+      store.activeId = t.id;
+      selectedId = null;
+      persist(); setActiveRefs(); renderTabs(); renderAll(); syncSettingsInputs();
+    });
+    bar.appendChild(addBtn);
+  }
+
+  // ================= CANVAS SETTINGS PANEL (right sidebar) =================
+  function syncSettingsInputs(){
+    document.getElementById('setCanvasBg').value = settings.canvasBg;
+    document.getElementById('setContentBg').value = settings.contentBg;
+    document.getElementById('setWidth').value = settings.width;
+    document.getElementById('setBorderWidth').value = settings.borderWidth;
+    document.getElementById('setBorderColor').value = settings.borderColor;
+    document.getElementById('setBorderRadius').value = settings.borderRadius;
+  }
+  document.getElementById('setCanvasBg').addEventListener('input', (e)=>{ settings.canvasBg = e.target.value; persist(); renderCanvas(); });
+  document.getElementById('setContentBg').addEventListener('input', (e)=>{ settings.contentBg = e.target.value; persist(); renderCanvas(); });
+  document.getElementById('setWidth').addEventListener('input', (e)=>{ settings.width = Number(e.target.value)||600; persist(); renderCanvas(); });
+  document.getElementById('setBorderWidth').addEventListener('input', (e)=>{ settings.borderWidth = Number(e.target.value)||0; persist(); renderCanvas(); });
+  document.getElementById('setBorderColor').addEventListener('input', (e)=>{ settings.borderColor = e.target.value; persist(); renderCanvas(); });
+  document.getElementById('setBorderRadius').addEventListener('input', (e)=>{ settings.borderRadius = Number(e.target.value)||0; persist(); renderCanvas(); });
+
+  // ================= GLOBAL EVENTS =================
+  document.querySelectorAll('.add-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> addElement(btn.dataset.type));
+  });
+  document.getElementById('copyBtn').addEventListener('click', copyEmailHtml);
+  document.getElementById('clearBtn').addEventListener('click', ()=>{
+    if(elements.length===0) return;
+    if(confirm('לנקות את כל התוכן בתבנית הנוכחית?')){
+      elements.length = 0;
+      selectedId = null;
+      renderAll(); persist();
+    }
+  });
+  document.getElementById('canvas').addEventListener('click',(e)=>{
+    if(e.target.id==='canvas'){
+      selectedId = null;
+      document.querySelectorAll('.el-wrap').forEach(w=>w.classList.remove('selected'));
+      renderProps();
+    }
+  });
+  document.addEventListener('click', (ev)=>{
+    document.querySelectorAll('.col-add-menu.open').forEach(m=>{
+      if(!m.previousElementSibling || !m.previousElementSibling.contains(ev.target)) m.classList.remove('open');
+    });
+  });
+
+  // ================= INIT =================
+  loadStore();
+  setActiveRefs();
+  renderTabs();
+  syncSettingsInputs();
+  renderAll();
+
+})();
+</script>
+</body>
+</html>
