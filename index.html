@@ -897,6 +897,7 @@
           break;
         case 'image':
           html += fieldSingle(el,'src','כתובת התמונה (URL)','url');
+          html += `<div class="prop-row"><label>או העלאת תמונה מהמחשב</label><input type="file" accept="image/*" data-file-key="src"></div>`;
           html += fieldSingle(el,'alt','טקסט חלופי (alt)');
           html += fieldSingle(el,'link','קישור בלחיצה על התמונה (אופציונלי)','url');
           html += `<div class="prop-inline">${fieldNumber(el,'width','רוחב (%)',10,100)}${fieldNumber(el,'radius','עיגול פינות',0,40)}</div>`;
@@ -939,6 +940,21 @@
         let val = inp.type==='checkbox' ? inp.checked : inp.value;
         if(inp.type==='number') val = Number(val);
         updateProp(el.id, key, val);
+      });
+    });
+    body.querySelectorAll('input[type=file][data-file-key]').forEach(inp=>{
+      const key = inp.dataset.fileKey;
+      inp.addEventListener('change', ()=>{
+        const file = inp.files && inp.files[0];
+        if(!file) return;
+        if(!file.type.startsWith('image/')){ showToast('נא לבחור קובץ תמונה'); return; }
+        const reader = new FileReader();
+        reader.onload = ()=>{
+          updateProp(el.id, key, reader.result);
+          renderProps();
+        };
+        reader.onerror = ()=>{ showToast('שגיאה בטעינת התמונה'); };
+        reader.readAsDataURL(file);
       });
     });
     body.querySelectorAll('input[data-bgkey]').forEach(inp=>{
@@ -1304,6 +1320,15 @@
     document.querySelectorAll('.col-add-menu.open').forEach(m=>{
       if(!m.previousElementSibling || !m.previousElementSibling.contains(ev.target)) m.classList.remove('open');
     });
+  });
+  document.addEventListener('keydown', (ev)=>{
+    if(ev.key !== 'Delete') return;
+    if(!selectedId) return;
+    const active = document.activeElement;
+    const isEditing = active && (active.tagName==='INPUT' || active.tagName==='TEXTAREA' || active.isContentEditable);
+    if(isEditing) return;
+    ev.preventDefault();
+    deleteElement(selectedId);
   });
 
   // ================= INIT =================
